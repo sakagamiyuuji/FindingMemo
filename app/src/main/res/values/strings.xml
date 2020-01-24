@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Finding Memo</string>
+    <string name="this_is_background_note">this is background note</string>
+    <string name="ex_sleep">Ex: Sleep</string>
+</resources>
