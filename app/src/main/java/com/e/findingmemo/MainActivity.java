@@ -32,8 +32,6 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> arrayList;
     private ArrayAdapter<String> arrayAdapter;
     private ListView listView;
-    private Button optionBtn;
-    private TextView tvList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addTask();
+                addTask2();
             }
         });
 
@@ -90,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.listView);
     }
 
-    private void addTask(){
+    // CARA 1
+    /*private void addTask(){
         View view = View.inflate(this, R.layout.add_layout, null);
         edtAdd = view.findViewById(R.id.edt_add);
 
@@ -115,16 +114,59 @@ public class MainActivity extends AppCompatActivity {
                     arrayList.add(newKey, input);
                     addToSP(newKey, input);
                     arrayAdapter.notifyDataSetChanged();
+                    //succesDialog();
+
                     Toast.makeText(getApplicationContext(), "Data telah di tambahkan", Toast.LENGTH_SHORT).show();
                 }
-
-
-
             }
-
         });
 
         alert.create().show();
+    }
+*/
+    //CARA 2
+    private void addTask2(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
+        View view = View.inflate(this, R.layout.layout_warning_dialog, null);
+        edtAdd = view.findViewById(R.id.edtTxt);
+        Button btnYes = view.findViewById(R.id.buttonYes);
+        Button btnNo = view.findViewById(R.id.buttonNo);
+
+        final AlertDialog alert = builder.create();
+        alert.setView(view);
+        btnYes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int newKey = arrayList.size();
+                String input = edtAdd.getText().toString();
+                Boolean isEmptyInput = false;
+
+                if(TextUtils.isEmpty(edtAdd.getText().toString())) {
+                    isEmptyInput = true;
+                    edtAdd.setError("Field tidak boleh kosong");
+                    //Toast.makeText(getApplicationContext(), "Data tidak boleh kosong", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    arrayList.add(newKey, input);
+                    addToSP(newKey, input);
+                    arrayAdapter.notifyDataSetChanged();
+                    //succesDialog();
+                    alert.dismiss();
+
+
+                    Toast.makeText(getApplicationContext(), "Data telah di tambahkan", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        btnNo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alert.dismiss();
+            }
+        });
+
+        alert.show();
     }
 
     private void addToSP(int key, String value){
@@ -200,7 +242,6 @@ public class MainActivity extends AppCompatActivity {
         alert.create().show();
     }
 
-
     private void reGenerate(){
         SharedPreferences sp = getSharedPreferences("sp_input", MODE_PRIVATE);
         SharedPreferences.Editor spEdit = sp.edit();
@@ -214,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
         spEdit.apply();
 
     }
+
 
 /*    private void option(){
         View view = View.inflate(this,R.layout.option_long_click, null);
