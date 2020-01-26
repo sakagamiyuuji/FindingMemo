@@ -1,19 +1,26 @@
 package com.e.findingmemo;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.ContextMenu;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -45,6 +52,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final  int key = position;
+                PopupMenu popUp = new PopupMenu(getApplicationContext(), view, Gravity.END);
+                popUp.getMenuInflater().inflate(R.menu.option_lv, popUp.getMenu());
+                popUp.show();
+                popUp.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()){
+                            case R.id.menu_edit:
+                                editLV(key);
+                                break;
+
+                            case R.id.menu_remove:
+                                remove(key);
+                                break;
+                        }
+                        return false;
+                    }
+                });
+                return false;
+            }
+        });
+
     }
 
 
@@ -70,10 +104,21 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 int newKey = arrayList.size();
                 String input = edtAdd.getText().toString();
-                arrayList.add(newKey, input);
-                addToSP(newKey, input);
+                Boolean isEmptyInput = false;
 
-                arrayAdapter.notifyDataSetChanged();
+                if(TextUtils.isEmpty(edtAdd.getText().toString())) {
+                    isEmptyInput = true;
+                    edtAdd.setError("Field tidak boleh kosong");
+                    //Toast.makeText(getApplicationContext(), "Data tidak boleh kosong", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    arrayList.add(newKey, input);
+                    addToSP(newKey, input);
+                    arrayAdapter.notifyDataSetChanged();
+                    Toast.makeText(getApplicationContext(), "Data telah di tambahkan", Toast.LENGTH_SHORT).show();
+                }
+
+
 
             }
 
@@ -99,12 +144,75 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSP(){
         SharedPreferences sp = getSharedPreferences("sp_input", MODE_PRIVATE);
-        if (sp.getAll().size() != 0){
+        if (sp.getAll().size() > 0){
             for (int i = 0; i < sp.getAll().size(); i++){
                 String key = String.valueOf(i);
                 arrayList.add(sp.getString(key, null));
             }
         }
+    }
+
+    private void remove(int position){
+        final int which_item = position;
+
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Delete Forever")
+                .setMessage("Are you sure?")
+                .setIcon(R.drawable.ic_delete_forever_red_24dp)
+                .setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        arrayList.remove(which_item);
+                        reGenerate();
+
+                        arrayAdapter.notifyDataSetChanged();
+                    }
+                })
+
+                .setNegativeButton("NO", null)
+                .create()
+                .show();
+    }
+
+    private void editLV(int position){
+        final int which_item = position;
+
+        View view = View.inflate(this, R.layout.add_layout, null);
+        edtAdd = view.findViewById(R.id.edt_add);
+        edtAdd.setText(arrayList.get(which_item));
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Edit");
+        alert.setView(view);
+        alert.setNegativeButton("Cancel", null);
+        alert.setPositiveButton("Change", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String textEdt = edtAdd.getText().toString();
+                arrayList.set(which_item, textEdt);
+                reGenerate();
+                arrayAdapter.notifyDataSetChanged();
+
+                Toast.makeText(getApplicationContext(), "Data telah di ubah", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        alert.create().show();
+    }
+
+
+    private void reGenerate(){
+        SharedPreferences sp = getSharedPreferences("sp_input", MODE_PRIVATE);
+        SharedPreferences.Editor spEdit = sp.edit();
+        spEdit.clear();
+        spEdit.apply();
+
+        for (int i=0; i<arrayList.size(); i++){
+            String key = String.valueOf(i);
+            spEdit.putString(key, arrayList.get(i));
+        }
+        spEdit.apply();
+
     }
 
 /*    private void option(){
@@ -116,5 +224,4 @@ public class MainActivity extends AppCompatActivity {
 
         option.create().show();
     }*/
-
 }

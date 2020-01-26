@@ -4,4 +4,18 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
     <color name="kuning">#E1E517</color>
+    <color name= "merahMawar">#eb152e</color>
+    <color name="biru">#245ae3</color>
+    <color name="merah">#d92511</color>
+    <color name="turqoise">#20e3d9</color>
+    <color name="darkmode">#282b2b</color>
+
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorSucces">#4BB543</color>
+    <color name="colorWarning">#FFCC00</color>
+    <color name="colorNeutral">#4BB543</color>
+    <color name="colorError">#CC0000</color>
+    <color name="colorTextPrimary">#212121</color>
+
+
 </resources>
