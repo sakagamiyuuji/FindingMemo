@@ -3,6 +3,7 @@ package com.e.findingmemo;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.ActionMenuItemView;
 
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -38,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> arrayList, listChecked;
     private ArrayAdapter<String> arrayAdapter;
     private ListView listView;
+
+    private int pos = -1;
 
     //item selected
 
@@ -352,9 +355,20 @@ public class MainActivity extends AppCompatActivity {
 
             else{
                 listChecked.add(arrayList.get(position));
-                listView.getChildAt(position).setBackgroundColor(Color.parseColor("#000000"));
+                listView.getChildAt(position).setBackgroundColor(Color.parseColor("#f2ce3f"));
             }
-            mode.setTitle(listChecked.size()+ "Task Checked : (");
+
+            ActionMenuItemView edit = findViewById(R.id.menu_change);
+            if(listChecked.size() > 1 || listChecked.size() == 0) {
+
+                edit.setVisibility(View.GONE);
+            }
+            else{
+                edit.setVisibility(View.VISIBLE);
+                pos = position;
+            }
+            Toast.makeText(getApplicationContext(),String.valueOf(listChecked.size()),Toast.LENGTH_SHORT).show();
+            mode.setTitle(listChecked.size()+ " Task Checked");
         }
 
 
@@ -389,12 +403,17 @@ public class MainActivity extends AppCompatActivity {
 
                     builderHapus.setNegativeButton("Cancel", null);
                     builderHapus.create().show();
+                    break;
 
                 case R.id.item_cancel_delete:
                     mode.finish();
+                    break;
 
                 case R.id.menu_change:
-                    editLV();
+                    editLV(pos);
+                    mode.finish();
+                    break;
+
             }
             return true;
         }
