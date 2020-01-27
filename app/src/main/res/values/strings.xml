@@ -2,4 +2,10 @@
     <string name="app_name">Finding Memo</string>
     <string name="this_is_background_note">this is background note</string>
     <string name="ex_sleep">Ex: Sleep</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="edit">EDIT</string>
+    <string name="title">Title</string>
+    <string name="remove_all">Remove all</string>
+    <string name="exit">EXIT</string>
 </resources>

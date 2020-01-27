@@ -6,13 +6,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.drm.DrmStore;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.ContextMenu;
+import android.view.ActionMode;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -25,13 +30,16 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fabAdd;
     private EditText edtAdd;
-    private ArrayList<String> arrayList;
+    private ArrayList<String> arrayList, listChecked;
     private ArrayAdapter<String> arrayAdapter;
     private ListView listView;
+
+    //item selected
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         initialComponent();
         generateLV();
 
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setMultiChoiceModeListener(multiChecker);
 
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,10 +60,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final  int key = position;
                 PopupMenu popUp = new PopupMenu(getApplicationContext(), view, Gravity.END);
                 popUp.getMenuInflater().inflate(R.menu.option_lv, popUp.getMenu());
@@ -69,11 +80,14 @@ public class MainActivity extends AppCompatActivity {
                             case R.id.menu_remove:
                                 remove(key);
                                 break;
+
+                            case R.id.delete_all:
+                                removeAll();
+                                break;
                         }
                         return false;
                     }
                 });
-                return false;
             }
         });
 
@@ -127,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
     //CARA 2
     private void addTask2(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
-        View view = View.inflate(this, R.layout.layout_warning_dialog, null);
+        View view = View.inflate(this, R.layout.layout_add_task, null);
         edtAdd = view.findViewById(R.id.edtTxt);
         Button btnYes = view.findViewById(R.id.buttonYes);
         Button btnNo = view.findViewById(R.id.buttonNo);
@@ -179,9 +193,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void generateLV(){
         arrayList = new ArrayList<String>();
+        listChecked = new ArrayList<String>();
         showSP();
         arrayAdapter = new ArrayAdapter<String>(this, R.layout.for_list, R.id.tvList, arrayList);
         listView.setAdapter(arrayAdapter);
+
     }
 
     private void showSP(){
@@ -219,27 +235,52 @@ public class MainActivity extends AppCompatActivity {
     private void editLV(int position){
         final int which_item = position;
 
-        View view = View.inflate(this, R.layout.add_layout, null);
-        edtAdd = view.findViewById(R.id.edt_add);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AlertDialogTheme);
+        View view = View.inflate(this, R.layout.layout_add_task, null);
+        edtAdd = view.findViewById(R.id.edtTxt);
         edtAdd.setText(arrayList.get(which_item));
 
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle("Edit");
-        alert.setView(view);
-        alert.setNegativeButton("Cancel", null);
-        alert.setPositiveButton("Change", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String textEdt = edtAdd.getText().toString();
-                arrayList.set(which_item, textEdt);
-                reGenerate();
-                arrayAdapter.notifyDataSetChanged();
+        TextView title = view.findViewById(R.id.textTitle);
+        title.setText(getString(R.string.edit));
+        Button btnYes = view.findViewById(R.id.buttonYes);
+        btnYes.setText(getString(R.string.apply));
+        Button btnNo = view.findViewById(R.id.buttonNo);
+        btnNo.setText(getString(R.string.cancel));
 
-                Toast.makeText(getApplicationContext(), "Data telah di ubah", Toast.LENGTH_SHORT).show();
+        final AlertDialog alert = builder.create();
+        alert.setView(view);
+
+        btnYes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String textEdt = edtAdd.getText().toString();
+                boolean isEmptyInput = false;
+
+                if(TextUtils.isEmpty(edtAdd.getText().toString())){
+                    isEmptyInput = true;
+                    edtAdd.setError("Field tidak boleh kosong");
+                    //Toast.makeText(getApplicationContext(), "Data tidak boleh kosong", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    arrayList.set(which_item, textEdt);
+                    reGenerate();
+                    arrayAdapter.notifyDataSetChanged();
+                    alert.dismiss();
+
+                    Toast.makeText(getApplicationContext(), "Data telah di ubah", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
-        alert.create().show();
+
+        btnNo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alert.dismiss();
+            }
+        });
+
+        alert.show();
     }
 
     private void reGenerate(){
@@ -256,14 +297,112 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void removeAll(){
+        arrayList.clear();
+        arrayAdapter.notifyDataSetChanged();
+        SharedPreferences sp = getSharedPreferences("sp_input", MODE_PRIVATE);
+        SharedPreferences.Editor spEdit = sp.edit();
+        spEdit.clear();
+        spEdit.apply();
+    }
 
-/*    private void option(){
-        View view = View.inflate(this,R.layout.option_long_click, null);
-        optionBtn = view.findViewById(R.id.edit);
+    private void removeSelected(List<String> items){
+        for (String item: items){
+            arrayList.remove(item);
+            reGenerate();
+        }
+        arrayAdapter.notifyDataSetChanged();
+    }
 
-        AlertDialog.Builder option = new AlertDialog.Builder(this);
-        option.setView(view);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.setting, menu);
 
-        option.create().show();
-    }*/
+        return true;
+    }
+
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.remove_all:
+               removeAll();
+               Toast.makeText(getApplicationContext(),"test",Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.exit:
+                finish();
+                break;
+            default:
+                return super.onContextItemSelected(item);
+
+
+        }
+        return true;
+    }
+
+    AbsListView.MultiChoiceModeListener multiChecker = new AbsListView.MultiChoiceModeListener() {
+        @Override
+        public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+            if(listChecked.contains(arrayList.get(position))){
+                listChecked.remove(arrayList.get(position));
+                listView.getChildAt(position).setBackgroundColor(Color.TRANSPARENT);
+            }
+
+            else{
+                listChecked.add(arrayList.get(position));
+                listView.getChildAt(position).setBackgroundColor(Color.parseColor("#000000"));
+            }
+            mode.setTitle(listChecked.size()+ "Task Checked : (");
+        }
+
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            MenuInflater inflate = mode.getMenuInflater();
+            inflate.inflate(R.menu.menucontext, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(final ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.item_delete:
+                    AlertDialog.Builder builderHapus = new AlertDialog.Builder(MainActivity.this);
+                    builderHapus.setTitle("Hapus Kegiatan Terpilih");
+                    builderHapus.setMessage("Are You Sure? ");
+                    builderHapus.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            listView.setBackgroundColor(Color.TRANSPARENT);
+                            Toast.makeText(getApplicationContext(), listChecked.size() + "Kegiatan terpilih berhasil di hapus", Toast.LENGTH_SHORT).show();
+                            removeSelected(listChecked);
+                            mode.finish();
+                        }
+                    });
+
+                    builderHapus.setNegativeButton("Cancel", null);
+                    builderHapus.create().show();
+
+                case R.id.item_cancel_delete:
+                    mode.finish();
+
+                case R.id.menu_change:
+                    editLV();
+            }
+            return true;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            listView.setAdapter(arrayAdapter);
+            listChecked.clear();
+        }
+    };
 }

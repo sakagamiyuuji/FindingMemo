@@ -9,4 +9,8 @@
         android:id="@+id/menu_remove"
         android:title="Remove" />
 
+    <item
+        android:id="@+id/delete_all"
+        android:title="@string/remove_all"/>
+
 </menu>
